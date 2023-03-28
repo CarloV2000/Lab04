@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,26 +25,55 @@ public class CorsoDAO {
 		try {
 			Connection conn = ConnectDB.getConnection();
 			PreparedStatement st = conn.prepareStatement(sql);
-
 			ResultSet rs = st.executeQuery();
-
+			List<Corso>resultCorso = new ArrayList<Corso>();
 			while (rs.next()) {
 
 				String codins = rs.getString("codins");
 				int numeroCrediti = rs.getInt("crediti");
 				String nome = rs.getString("nome");
 				int periodoDidattico = rs.getInt("pd");
-
-				System.out.println(codins + " " + numeroCrediti + " " + nome + " " + periodoDidattico);
+				Corso c = new Corso(codins, numeroCrediti, nome, periodoDidattico);
+				resultCorso.add(c);
 
 				// Crea un nuovo JAVA Bean Corso
 				// Aggiungi il nuovo oggetto Corso alla lista corsi
 			}
-
+			st.close();
+			rs.close();
 			conn.close();
-			
-			return corsi;
-			
+			return resultCorso;			
+
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db", e);
+		}
+	}
+	
+	public List<Corso> getCorsiDataMatricola(int matricola){
+		List<Corso> result = new ArrayList<Corso>();
+		
+		String sql = "SELECT c.* "
+				+ "FROM corso c, iscrizione i "
+				+ "WHERE c.codins = i.codins AND i.matricola= ? ";
+		
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1,matricola);
+			ResultSet rs = st.executeQuery();
+			while (rs.next()) {
+				String codins = rs.getString("codins");
+				int numeroCrediti = rs.getInt("crediti");
+				String nome = rs.getString("nome");
+				int periodoDidattico = rs.getInt("pd");
+				Corso c = new Corso(codins, numeroCrediti, nome, periodoDidattico);
+				result.add(c);
+			}
+			st.close();
+			rs.close();
+			conn.close();
+			return result;			
 
 		} catch (SQLException e) {
 			// e.printStackTrace();
